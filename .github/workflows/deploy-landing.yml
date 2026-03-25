@@ -19,7 +19,7 @@ jobs:
       - name: Install Firebase Tools
         run: npm install -g firebase-tools
       - name: Apply hosting target
-        run: firebase target:apply hosting videoforge videoforge --project linh-s-blog
+        run: firebase target:apply hosting videoforge videoforge-cli --project linh-s-blog
         working-directory: ./landing
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

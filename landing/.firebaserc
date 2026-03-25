@@ -6,7 +6,7 @@
     "linh-s-blog": {
       "hosting": {
         "videoforge": [
-          "videoforge"
+          "videoforge-cli"
         ]
       }
     }
