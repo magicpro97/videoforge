@@ -1,8 +1,31 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { createHistoryManager, type BaseHistoryEntry } from '@magicpro97/forge-core';
 import { getConfigDir } from './config.js';
 import type { HistoryEntry } from '../types/index.js';
+
+interface HistoryEntryInternal extends BaseHistoryEntry {
+  provider: string;
+  model: string;
+  prompt: string;
+  duration: number;
+  resolution?: string;
+  cost?: number;
+  outputPath?: string;
+}
+
+let _manager: ReturnType<typeof createHistoryManager<HistoryEntryInternal>> | null = null;
+
+function getManager() {
+  if (!_manager) {
+    _manager = createHistoryManager<HistoryEntryInternal>({
+      configDir: getConfigDir(),
+      maxEntries: 1000,
+    });
+  }
+  return _manager;
+}
 
 export function getHistoryPath(): string {
   return path.join(getConfigDir(), 'history.json');
@@ -39,10 +62,9 @@ export function addHistoryEntry(entry: Omit<HistoryEntry, 'id' | 'timestamp'>): 
 }
 
 export function clearHistory(): void {
-  saveHistory([]);
+  getManager().clearHistory();
 }
 
 export function getHistoryEntry(id: string): HistoryEntry | undefined {
-  const entries = loadHistory();
-  return entries.find((entry) => entry.id === id);
+  return getManager().getEntry(id) as HistoryEntry | undefined;
 }

@@ -1,45 +1,36 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
+import { createConfigManager } from '@magicpro97/forge-core';
 import type { AppConfig } from '../types/index.js';
 
+let _manager: ReturnType<typeof createConfigManager<AppConfig>> | null = null;
+
+function getManager() {
+  if (!_manager) {
+    _manager = createConfigManager<AppConfig>({
+      toolName: 'videoforge',
+      defaultConfig: {} as AppConfig,
+    });
+  }
+  return _manager;
+}
+
 export function getConfigDir(): string {
-  return path.join(os.homedir(), '.videoforge');
+  return getManager().getConfigDir();
 }
 
 export function getConfigPath(): string {
-  return path.join(getConfigDir(), 'config.json');
+  return getManager().getConfigFilePath();
 }
 
 export function loadConfig(): AppConfig {
-  const configPath = getConfigPath();
-  try {
-    const raw = fs.readFileSync(configPath, 'utf-8');
-    return JSON.parse(raw) as AppConfig;
-  } catch {
-    return {};
-  }
+  return getManager().loadConfig();
 }
 
 export function saveConfig(config: AppConfig): void {
-  const configDir = getConfigDir();
-  if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir, { recursive: true });
-  }
-  fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2), 'utf-8');
+  getManager().saveConfig(config);
 }
 
 export function getConfigValue(key: string): unknown {
-  const config = loadConfig();
-  const parts = key.split('.');
-  let current: unknown = config;
-  for (const part of parts) {
-    if (current === null || current === undefined || typeof current !== 'object') {
-      return undefined;
-    }
-    current = (current as Record<string, unknown>)[part];
-  }
-  return current;
+  return getManager().getConfigValue(key);
 }
 
 export function setConfigValue(key: string, value: string): void {

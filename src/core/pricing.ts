@@ -1,3 +1,8 @@
+import { createPricingManager } from '@magicpro97/forge-core';
+import { getConfigDir } from './config.js';
+
+export { createPricingManager, getConfigDir as _getConfigDirForPricing };
+
 export interface PriceEntry {
   rate: number;
   unit: 'second' | 'generation';

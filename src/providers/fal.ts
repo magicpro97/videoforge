@@ -1,4 +1,11 @@
 import { readFileSync } from 'node:fs';
+import {
+  falSubmitJob,
+  falPollStatus,
+  falGetResult,
+  falExtractMediaUrl,
+  type FalOptions,
+} from '@magicpro97/forge-core';
 import { VideoProvider } from './base.js';
 import type { VideoGenerationRequest, VideoGenerationResult, ProviderInfo } from '../types/index.js';
 
@@ -51,6 +58,10 @@ export class FalProvider extends VideoProvider {
   async validate(): Promise<boolean> {
     if (!this.apiKey) return false;
     return true;
+  }
+
+  private getFalOptions(): FalOptions {
+    return { apiKey: this.apiKey, baseUrl: this.baseUrl };
   }
 
   async generate(request: VideoGenerationRequest): Promise<VideoGenerationResult> {
@@ -142,84 +153,34 @@ export class FalProvider extends VideoProvider {
   }
 
   private async submitJob(model: string, body: Record<string, unknown>): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/${model}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Key ${this.apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+    const requestId = await falSubmitJob(this.getFalOptions(), model, body);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const msg = (errorData as Record<string, string>)?.detail || response.statusText;
-      throw new Error(`fal.ai API error (${response.status}): ${msg}`);
-    }
-
-    const result = await response.json() as { request_id: string };
-    if (!result.request_id) {
+    // forge-core returns a JSON string for direct results (no request_id);
+    // preserve original error for missing request_id
+    try {
+      JSON.parse(requestId);
       throw new Error('fal.ai: No request_id in submit response');
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        return requestId;
+      }
+      throw e;
     }
-    return result.request_id;
   }
 
   private async pollStatus(model: string, requestId: string): Promise<void> {
-    const pollInterval = 5000;
-    const maxWait = 600000;
-    let waited = 0;
-
-    while (waited < maxWait) {
-      await new Promise(r => setTimeout(r, pollInterval));
-      waited += pollInterval;
-
-      const response = await fetch(
-        `${this.baseUrl}/${model}/requests/${requestId}/status`,
-        { headers: { Authorization: `Key ${this.apiKey}` } },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const msg = (errorData as Record<string, string>)?.detail || response.statusText;
-        throw new Error(`fal.ai poll error (${response.status}): ${msg}`);
+    try {
+      await falPollStatus(this.getFalOptions(), model, requestId);
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('timed out')) {
+        throw new Error('fal.ai job timed out after 10 minutes');
       }
-
-      const statusData = await response.json() as { status: string };
-
-      if (statusData.status === 'COMPLETED') {
-        return;
-      }
-
-      if (statusData.status !== 'IN_QUEUE' && statusData.status !== 'IN_PROGRESS') {
-        throw new Error(`fal.ai job failed with status: ${statusData.status}`);
-      }
+      throw e;
     }
-
-    throw new Error('fal.ai job timed out after 10 minutes');
   }
 
   private async getResult(model: string, requestId: string): Promise<string> {
-    const response = await fetch(
-      `${this.baseUrl}/${model}/requests/${requestId}`,
-      { headers: { Authorization: `Key ${this.apiKey}` } },
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const msg = (errorData as Record<string, string>)?.detail || response.statusText;
-      throw new Error(`fal.ai result error (${response.status}): ${msg}`);
-    }
-
-    const result = await response.json() as Record<string, unknown>;
-    const videoUrl =
-      (result.video as Record<string, string>)?.url ||
-      ((result.data as Record<string, unknown>)?.video as Record<string, string>)?.url ||
-      (result.output as Record<string, string>)?.url;
-
-    if (!videoUrl) {
-      throw new Error('fal.ai: No video URL in result response');
-    }
-
-    return videoUrl;
+    const result = await falGetResult(this.getFalOptions(), model, requestId);
+    return falExtractMediaUrl(result, 'video');
   }
 }

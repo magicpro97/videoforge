@@ -1,10 +1,15 @@
+import {
+  replicateCreatePrediction,
+  replicateValidateApiKey,
+  type ReplicatePrediction,
+} from '@magicpro97/forge-core';
 import { VideoProvider } from './base.js';
 import type { VideoGenerationRequest, VideoGenerationResult, ProviderInfo } from '../types/index.js';
 
-const MODEL_VERSIONS: Record<string, string> = {
-  'kwaivgi/kling-v1.5-standard': 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
-  'wan-ai/wan-2.1-t2v': 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3',
-};
+const SUPPORTED_MODELS = [
+  'kwaivgi/kling-v1.5-standard',
+  'wan-ai/wan-2.1-t2v',
+];
 
 export class ReplicateProvider extends VideoProvider {
   private apiKey: string = '';
@@ -18,7 +23,7 @@ export class ReplicateProvider extends VideoProvider {
       website: 'https://replicate.com/',
       requiresApiKey: true,
       defaultModel: 'kwaivgi/kling-v1.5-standard',
-      supportedModels: ['kwaivgi/kling-v1.5-standard', 'wan-ai/wan-2.1-t2v'],
+      supportedModels: [...SUPPORTED_MODELS],
       capabilities: {
         textToVideo: true,
         imageToVideo: false,
@@ -44,14 +49,7 @@ export class ReplicateProvider extends VideoProvider {
 
   async validate(): Promise<boolean> {
     if (!this.apiKey) return false;
-    try {
-      const response = await fetch(`${this.baseUrl}/account`, {
-        headers: { Authorization: `Token ${this.apiKey}` },
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
+    return replicateValidateApiKey({ apiKey: this.apiKey, baseUrl: this.baseUrl });
   }
 
   async generate(request: VideoGenerationRequest): Promise<VideoGenerationResult> {
@@ -62,10 +60,9 @@ export class ReplicateProvider extends VideoProvider {
     const startTime = Date.now();
     const model = request.model || 'kwaivgi/kling-v1.5-standard';
     const duration = request.duration || 5;
-    const version = MODEL_VERSIONS[model];
 
-    if (!version) {
-      throw new Error(`Unknown Replicate model: ${model}. Available: ${Object.keys(MODEL_VERSIONS).join(', ')}`);
+    if (!SUPPORTED_MODELS.includes(model)) {
+      throw new Error(`Unknown Replicate model: ${model}. Available: ${SUPPORTED_MODELS.join(', ')}`);
     }
 
     const input: Record<string, unknown> = {
@@ -83,30 +80,14 @@ export class ReplicateProvider extends VideoProvider {
       input.seed = request.seed;
     }
 
-    const createResponse = await fetch(`${this.baseUrl}/predictions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Token ${this.apiKey}`,
-      },
-      body: JSON.stringify({ version, input }),
-    });
-
-    if (!createResponse.ok) {
-      const errorData = await createResponse.json().catch(() => ({}));
-      const msg = (errorData as Record<string, string>)?.detail || createResponse.statusText;
-      throw new Error(`Replicate API error (${createResponse.status}): ${msg}`);
-    }
-
-    const prediction = await createResponse.json() as {
-      id: string;
-      status: string;
-      output?: string | string[];
-      urls?: { get?: string };
-    };
+    const prediction = await replicateCreatePrediction(
+      { apiKey: this.apiKey, baseUrl: this.baseUrl },
+      model,
+      input,
+    );
 
     let status = prediction.status;
-    let output = prediction.output;
+    let output = prediction.output as string | string[] | undefined;
     const pollUrl = prediction.urls?.get || `${this.baseUrl}/predictions/${prediction.id}`;
 
     const pollInterval = 3000;

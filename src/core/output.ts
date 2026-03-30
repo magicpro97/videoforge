@@ -1,5 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { saveOutputFiles } from '@magicpro97/forge-core';
+
+export { saveOutputFiles };
 
 export function generateFilename(provider: string, prompt: string, format: string): string {
   const sanitized = prompt
