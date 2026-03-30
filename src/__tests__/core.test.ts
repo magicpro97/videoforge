@@ -475,8 +475,8 @@ describe('output', () => {
 
 describe('presets', () => {
   describe('STYLE_PRESETS', () => {
-    it('contains 15 presets', () => {
-      expect(Object.keys(STYLE_PRESETS)).toHaveLength(15);
+    it('contains 20 presets', () => {
+      expect(Object.keys(STYLE_PRESETS)).toHaveLength(20);
     });
 
     it('all presets have non-empty string values', () => {
@@ -512,7 +512,7 @@ describe('presets', () => {
       expect(names).toContain('cinematic');
       expect(names).toContain('anime');
       expect(names).toContain('watercolor');
-      expect(names).toHaveLength(15);
+      expect(names).toHaveLength(20);
     });
   });
 });
