@@ -85,8 +85,8 @@ export function createCostCommand(): Command {
         console.log(chalk.dim(`  ${provider.info.pricing.unit}\n`));
 
         if (pricing && Object.keys(pricing).length > 0) {
-          for (const [model, rate] of Object.entries(pricing)) {
-            console.log(`    ${model.padEnd(35)} $${rate.toFixed(4)} / ${provider.info.pricing.unit}`);
+          for (const [model, entry] of Object.entries(pricing)) {
+            console.log(`    ${model.padEnd(35)} $${entry.rate.toFixed(4)} / ${entry.unit}`);
           }
         } else {
           console.log(chalk.dim('    No pricing data available'));

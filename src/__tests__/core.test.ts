@@ -54,6 +54,7 @@ import {
   estimateCost,
   getProviderPricing,
   getAllPricing,
+  type PriceEntry,
 } from '../core/pricing.js';
 
 import {
@@ -614,7 +615,7 @@ describe('resolutions', () => {
 describe('pricing', () => {
   describe('estimateCost', () => {
     it('calculates cost for known provider and model', () => {
-      expect(estimateCost('runway', 'gen4', 10)).toBeCloseTo(1.2);
+      expect(estimateCost('runway', 'gen4', 10)).toBeCloseTo(0.5);
     });
 
     it('returns 0 for unknown provider', () => {
@@ -630,27 +631,28 @@ describe('pricing', () => {
     });
 
     it('handles fal provider pricing', () => {
-      expect(estimateCost('fal', 'fal-ai/veo3', 5)).toBeCloseTo(2.0);
+      expect(estimateCost('fal', 'fal-ai/veo3', 5)).toBeCloseTo(0.50);
     });
 
     it('handles replicate provider pricing', () => {
-      expect(estimateCost('replicate', 'wan-ai/wan-2.1-t2v', 10)).toBeCloseTo(0.8);
+      expect(estimateCost('replicate', 'wan-ai/wan-2.1-t2v', 10)).toBeCloseTo(0.25);
     });
 
     it('handles veo provider pricing', () => {
-      expect(estimateCost('veo', 'veo-3.1-generate-001', 5)).toBeCloseTo(2.0);
+      expect(estimateCost('veo', 'veo-3.1-generate-001', 5)).toBeCloseTo(0.30);
     });
 
     it('handles sora provider pricing', () => {
-      expect(estimateCost('sora', 'sora-2', 10)).toBeCloseTo(1.0);
+      expect(estimateCost('sora', 'sora-2', 10)).toBeCloseTo(0.20);
     });
   });
 
   describe('getProviderPricing', () => {
     it('returns pricing map for known provider', () => {
       const pricing = getProviderPricing('runway');
-      expect(pricing['gen4']).toBe(0.12);
-      expect(pricing['gen4_turbo']).toBe(0.05);
+      expect(pricing['gen4'].rate).toBe(0.05);
+      expect(pricing['gen4'].unit).toBe('second');
+      expect(pricing['gen4_turbo'].rate).toBe(0.05);
     });
 
     it('returns empty object for unknown provider', () => {

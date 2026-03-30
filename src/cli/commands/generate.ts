@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { loadConfig, getConfigValue } from '../../core/config.js';
 import { createProvider } from '../../providers/index.js';
 import { addHistoryEntry } from '../../core/history.js';
-import { generateFilename, ensureOutputDir, downloadVideo, saveVideoFile } from '../../core/output.js';
+import { generateFilename, downloadVideo, saveVideoFile } from '../../core/output.js';
 import { applyPreset, STYLE_PRESETS } from '../../core/presets.js';
 import { getResolution } from '../../core/resolutions.js';
 import { estimateCost } from '../../core/pricing.js';
@@ -172,8 +172,6 @@ export function createGenerateCommand(): Command {
           const outputPath = options.output
             ? (result.videos.length > 1 ? `${options.output.replace(/\.\w+$/, '')}_${i + 1}.${format}` : options.output)
             : generateFilename(providerName, prompt, format);
-
-          ensureOutputDir(outputPath);
 
           let savedPath: string;
           if (video.url) {

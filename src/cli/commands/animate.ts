@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { loadConfig, getConfigValue } from '../../core/config.js';
 import { createProvider } from '../../providers/index.js';
 import { addHistoryEntry } from '../../core/history.js';
-import { generateFilename, ensureOutputDir, downloadVideo, saveVideoFile } from '../../core/output.js';
+import { generateFilename, downloadVideo, saveVideoFile } from '../../core/output.js';
 import { estimateCost } from '../../core/pricing.js';
 import { openFile } from '../../core/opener.js';
 import type { VideoGenerationRequest } from '../../types/index.js';
@@ -118,8 +118,6 @@ export function createAnimateCommand(): Command {
 
         /* v8 ignore next */
         const outputPath = options.output || generateFilename(providerName, request.prompt, format);
-        ensureOutputDir(outputPath);
-
         let savedPath: string;
         if (video.url) {
           savedPath = await downloadVideo(video.url, outputPath);

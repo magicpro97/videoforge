@@ -5,7 +5,7 @@ import yaml from 'yaml';
 import { loadConfig, getConfigValue } from '../../core/config.js';
 import { createProvider } from '../../providers/index.js';
 import { addHistoryEntry } from '../../core/history.js';
-import { generateFilename, ensureOutputDir, downloadVideo, saveVideoFile } from '../../core/output.js';
+import { generateFilename, downloadVideo, saveVideoFile } from '../../core/output.js';
 import { applyPreset, STYLE_PRESETS } from '../../core/presets.js';
 import { estimateCost } from '../../core/pricing.js';
 import type { VideoGenerationRequest } from '../../types/index.js';
@@ -155,8 +155,6 @@ export function createBatchCommand(): Command {
           const outputPath = item.output
             ? path.resolve(item.output)
             : generateFilename(providerName, prompt, format);
-          ensureOutputDir(outputPath);
-
           let savedPath: string;
           if (video.url) {
             savedPath = await downloadVideo(video.url, outputPath);

@@ -118,7 +118,7 @@ beforeEach(() => {
   vi.mocked(applyPreset).mockImplementation((p: string) => p + ', cinematic');
   vi.mocked(loadHistory).mockReturnValue([]);
   vi.mocked(loadTemplates).mockReturnValue([]);
-  vi.mocked(getAllPricing).mockReturnValue({ runway: { gen4_turbo: 0.05 } });
+  vi.mocked(getAllPricing).mockReturnValue({ runway: { gen4_turbo: { rate: 0.05, unit: 'second' } } } as any);
   vi.mocked(getProviderPricing).mockReturnValue({ gen4_turbo: 0.05 });
   vi.mocked(fs.existsSync).mockReturnValue(true);
   vi.mocked(fs.readFileSync).mockReturnValue('[]' as any);

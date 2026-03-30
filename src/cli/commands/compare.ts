@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { loadConfig, getConfigValue } from '../../core/config.js';
 import { createProvider, getAllProviderNames } from '../../providers/index.js';
-import { generateFilename, ensureOutputDir, downloadVideo, saveVideoFile } from '../../core/output.js';
+import { generateFilename, downloadVideo, saveVideoFile } from '../../core/output.js';
 import { addHistoryEntry } from '../../core/history.js';
 import { estimateCost } from '../../core/pricing.js';
 import type { VideoGenerationRequest } from '../../types/index.js';
@@ -109,8 +109,6 @@ export function createCompareCommand(): Command {
           const outputPath = options.output
             ? `${options.output}/${providerName}_${Date.now()}.${format}`
             : generateFilename(providerName, prompt, format);
-          ensureOutputDir(outputPath);
-
           let savedPath: string;
           if (video.url) {
             savedPath = await downloadVideo(video.url, outputPath);
