@@ -22,7 +22,7 @@ export class ReplicateProvider extends VideoProvider {
       description: 'Video generation via Replicate — Kling, Wan, and community models',
       website: 'https://replicate.com/',
       requiresApiKey: true,
-      defaultModel: 'kwaivgi/kling-v1.5-standard',
+      defaultModel: 'wan-ai/wan-2.1-t2v',
       supportedModels: [...SUPPORTED_MODELS],
       capabilities: {
         textToVideo: true,
@@ -58,7 +58,7 @@ export class ReplicateProvider extends VideoProvider {
     }
 
     const startTime = Date.now();
-    const model = request.model || 'kwaivgi/kling-v1.5-standard';
+    const model = request.model || 'wan-ai/wan-2.1-t2v';
     const duration = request.duration || 5;
 
     if (!SUPPORTED_MODELS.includes(model)) {
