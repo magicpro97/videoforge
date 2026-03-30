@@ -27,6 +27,7 @@ interface GenerateOptions {
   output?: string;
   template?: string;
   var?: string[];
+  dryRun?: boolean;
 }
 
 export function createGenerateCommand(): Command {
@@ -54,6 +55,7 @@ export function createGenerateCommand(): Command {
       prev.push(val);
       return prev;
     }, [])
+    .option('--dry-run', 'Show estimated cost without generating')
     .action(async (prompt: string, options: GenerateOptions) => {
       const chalk = (await import('chalk')).default;
       const ora = (await import('ora')).default;
@@ -147,6 +149,15 @@ export function createGenerateCommand(): Command {
       console.log(chalk.dim(`  Prompt:     "${prompt.slice(0, 60)}${prompt.length > 60 ? '...' : ''}"`));
       console.log('');
       /* v8 ignore stop */
+
+      // Dry run — show cost estimate without generating
+      if (options.dryRun) {
+        const modelUsed = request.model || provider.info.defaultModel;
+        const cost = estimateCost(providerName, modelUsed, request.duration || 5) * (request.count || 1);
+        console.log(chalk.cyan(`  💰 Estimated cost: ~$${cost.toFixed(4)}`));
+        console.log(chalk.dim('  (dry run — no API call made)\n'));
+        return;
+      }
 
       const spinner = ora({ text: 'Generating video...', indent: 2 }).start();
 
