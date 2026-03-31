@@ -1,7 +1,7 @@
 {
   "name": "videoforge",
-  "version": "1.0.0",
-  "description": "AI Video Generator CLI \u2014 Multi-provider text-to-video and image-to-video generation",
+  "version": "1.1.0",
+  "description": "AI Video Generator CLI — Multi-provider text-to-video and image-to-video generation",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
